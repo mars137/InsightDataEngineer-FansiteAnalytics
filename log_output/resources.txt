@@ -1,1 +1,10 @@
-Output for Feature 2 would go here
+/
+/shuttle/countdown/count.gif
+/images/dual-pad.gif
+/shuttle/missions/sts-70/images/KSC-95EC-1013.jpg
+/history/apollo/apollo-13/images/70HC314.GIF
+/shuttle/missions/sts-71/images/KSC-95EC-0882.jpg
+/shuttle/technology/sts-newsref/sts_asm.html
+/shuttle/countdown/video/livevideo.gif
+/shuttle/missions/sts-71/images/KSC-95EC-0613.jpg
+/shuttle/missions/sts-71/sts-71-patch-small.gif
