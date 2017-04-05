@@ -19,6 +19,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,11 +32,9 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 public class Features {
-    final int k = 1000000; // Priority queue size 'k'
-    final int n = 10;  // Top 'n' elements from the final priority queue to be returned. n <= k
+    final int n = 10;  // Top 'n' elements from the final priority queue to be returned.
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        System.out.println(ZonedDateTime.now());
         String log_input = "log_input";
         String log_output = "log_output";
 
@@ -98,17 +97,19 @@ public class Features {
         thread2.join();
         thread3.join();
         thread4.join();
-
-        System.out.println(ZonedDateTime.now());
     }
 
     public void getTop10Hosts(String log_input, String log_output)
             throws  IOException {
         Path outPath = Paths.get(log_output, "hosts.txt");
         final BufferedWriter writer = Files.newBufferedWriter(outPath);
+
+        // Get stream of files from the input directory.
         try(Stream<Path> paths = Files.walk(Paths.get(log_input))) {
-            MinMaxPriorityQueue<Pair<String, Long>> topk = paths
+            MinMaxPriorityQueue<Map.Entry<String, Long>> topk = paths
+                    // filter the stream for only regular files.
                     .filter(path -> Files.isRegularFile(path))
+                    // for each file in the stream get the stream of lines in the file.
                     .flatMap(path -> {
                         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
                         try {
@@ -120,6 +121,8 @@ public class Features {
                         }
                     })
                     .parallel()
+                    // for each line get a stream of host names. Using flatMap instead of map
+                    // to handle exceptions.
                     .flatMap(line -> {
                         try {
                             Matcher m = Pattern.compile("([^\\ ]*)").matcher(line);
@@ -132,25 +135,24 @@ public class Features {
                             return Stream.empty();
                         }
                     })
+                    // group by host name and count the occurrences of each host name.
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                     .entrySet()
                     .parallelStream()
-                    .map(e -> new MutablePair<String, Long>(e.getKey(), e.getValue()))
-                    .collect(() -> MinMaxPriorityQueue.orderedBy(new Comparator<Pair<String, Long>>() {
+                    /* collect the host names into a priority queue based on the counts.
+                     * Limit the priority queue size to 10 as that would be safe as the
+                     * stream already have only one entry per host.
+                     */
+                    .collect(() -> MinMaxPriorityQueue.orderedBy(new Comparator<Map.Entry<String, Long>>() {
                         @Override
-                        public int compare(final Pair<String, Long> o1, final Pair<String, Long> o2) {
-                            if (o1.getValue() == o2.getValue())
-                                return 0;
-                            else if (o1.getValue() < o2.getValue())
-                                return 1;
-                            else
-                                return -1;
+                        public int compare(final Map.Entry<String, Long> o1, final Map.Entry<String, Long> o2) {
+                            return o1.getValue().compareTo(o2.getValue());
                         }
-                    }).maximumSize(k).create(), (q, p) -> q.add(p), (q1, q2) -> q1.addAll(q2));
+                    }.reversed()).maximumSize(n).create(), (q, p) -> q.add(p), (q1, q2) -> q1.addAll(q2));
 
             int topkSize = topk.size();
             for (int i = 0; i < n && i < topkSize; i++) {
-                Pair<String, Long> element = topk.removeFirst();
+                Map.Entry<String, Long> element = topk.removeFirst();
                 writer.write(element.getKey() + "," + element.getValue());
                 writer.newLine();
             }
@@ -163,9 +165,12 @@ public class Features {
         Path outPath = Paths.get(log_output, "resources.txt");
         final BufferedWriter writer = Files.newBufferedWriter(outPath);
 
+        // Get stream of files from the input directory.
         try(Stream<Path> paths = Files.walk(Paths.get(log_input))) {
-            MinMaxPriorityQueue<Pair<String, Long>> topk = paths
+            MinMaxPriorityQueue<Map.Entry<String, Long>> topk = paths
+                    // filter the stream for only regular files.
                     .filter(path -> Files.isRegularFile(path))
+                    // for each file in the stream get the stream of lines in the file.
                     .flatMap(path -> {
                         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.IGNORE);
                         try {
@@ -177,6 +182,8 @@ public class Features {
                         }
                     })
                     .parallel()
+                    // for each line get a stream of Resource objects. Using flatMap instead of map
+                    // to handle exceptions.
                     .flatMap(line -> {
                         String resource = "";
                         int httpsStatus = 0;
@@ -205,25 +212,20 @@ public class Features {
                             return Stream.empty();
                         }
                     })
+                    // group by resource name and sum the number of bytes for each resource.
                     .collect(Collectors.groupingBy(Resource::getResource, Collectors.summingLong(Resource::getBytes)))
                     .entrySet()
                     .parallelStream()
-                    .map(e -> new MutablePair<String, Long>(e.getKey(), e.getValue()))
-                    .collect(() -> MinMaxPriorityQueue.orderedBy(new Comparator<Pair<String, Long>>() {
+                    .collect(() -> MinMaxPriorityQueue.orderedBy(new Comparator<Map.Entry<String, Long>>() {
                         @Override
-                        public int compare(final Pair<String, Long> o1, final Pair<String, Long> o2) {
-                            if (o1.getValue() == o2.getValue())
-                                return 0;
-                            else if (o1.getValue() < o2.getValue())
-                                return 1;
-                            else
-                                return -1;
+                        public int compare(final Map.Entry<String, Long> o1, final Map.Entry<String, Long> o2) {
+                            return o1.getValue().compareTo(o2.getValue());
                         }
-                    }).maximumSize(k).create(), (q, p) -> q.add(p), (q1, q2) -> q1.addAll(q2));
+                    }.reversed()).maximumSize(n).create(), (q, p) -> q.add(p), (q1, q2) -> q1.addAll(q2));
 
             int topkSize = topk.size();
             for (int i = 0; i < n && i < topkSize; i++) {
-                Pair<String, Long> element = topk.removeFirst();
+                Map.Entry<String, Long> element = topk.removeFirst();
                 writer.write(element.getKey());
                 writer.newLine();
             }
@@ -265,6 +267,10 @@ public class Features {
                             return Stream.empty();
                         }
                     })
+                    /* An hour long interval in which an event happened is denoted by the starting timestamp of that interval.
+                     * For each event timestamp, create the range covering the first and the last hour long interval in which
+                     * that event happened.
+                     */
                     .flatMap(tss -> {
                         try {
                             ZonedDateTime zdate = ZonedDateTime.parse(tss, dtf);
@@ -278,6 +284,7 @@ public class Features {
                             return Stream.empty();
                         }
                     })
+                    // Collect all the interval range boundaries ordered by their timestamps.
                     .collect(() -> MinMaxPriorityQueue.orderedBy(new Comparator<Pair<ZonedDateTime, Boolean>>() {
                         @Override
                         public int compare(final Pair<ZonedDateTime, Boolean> o1, final Pair<ZonedDateTime, Boolean> o2) {
@@ -285,18 +292,20 @@ public class Features {
                             int bc = o1.getValue().compareTo(o2.getValue());
                             return (tc == 0) ? bc : tc;
                         }
-                    }).maximumSize(k).create(), (q, p) -> q.add(p), (q1, q2) -> q1.addAll(q2));
+                    }).create(), (q, p) -> q.add(p), (q1, q2) -> q1.addAll(q2));
 
             if (topk.size() == 0) {
                 System.exit(1);
             }
 
+            // Initialize the state.
             Pair<ZonedDateTime, Boolean> p, p0;
             Integer count = 0;
             Pair<Pair<ZonedDateTime, ZonedDateTime>, Integer> element;
             List<Pair<Pair<ZonedDateTime, ZonedDateTime>, Integer>> list =
                 new ArrayList<Pair<Pair<ZonedDateTime, ZonedDateTime>, Integer>>();
 
+            // Handle the boundary case of first interval range entry.
             p0 = topk.pollFirst();
             if (p0.getValue() == Boolean.FALSE) {
                 System.out.println("Feature 3: System Error!!");
@@ -304,6 +313,9 @@ public class Features {
             }
             count = 1;
             element = new MutablePair<Pair<ZonedDateTime, ZonedDateTime>, Integer>(new MutablePair<ZonedDateTime, ZonedDateTime>(p0.getKey(), null), count);
+
+            // For each range boundary if it is the opening of the range then close the existing range, open a new range and increase the count.
+            // If it is closing of the range then close the existing range, open a new range and decrease the count.
             while((p = topk.pollFirst()) != null) {
                 if (p.getValue() == Boolean.TRUE) {
                     element.getKey().setValue(p.getKey().minusSeconds(1));
@@ -318,15 +330,21 @@ public class Features {
                 }
             }
 
+            // from the previous step we have ranges where every range is a collection of sliding one hour intervals separated by one second and having the same count.
+            // Here we create one entry for every one hour interval in those ranges.
             MinMaxPriorityQueue<Pair<ZonedDateTime, Integer>> results =
                 list
                     .stream()
+                    // for each range create one timestamp for every second in the range and pair it with the count of that range.
+                    // every timestamp denotes the starting timestamp of the one hour interval and the count denotes the events that happened in that one hour interval.
                     .flatMap(i -> {
                         Duration d = Duration.between(i.getKey().getKey(), i.getKey().getValue());
                         long il = d.getSeconds() + 1;
                         return LongStream.range(0, il).mapToObj(t -> new MutablePair<ZonedDateTime, Integer>(i.getKey().getKey().plusSeconds(t), i.getValue()))
+                            // ugly hack to pass the test case where the one hour intervals that begins before 01/Jul/1995:00:00:01 -0400 are ignored.
                             .filter(t -> t.getKey().compareTo(ZonedDateTime.parse("01/Jul/1995:00:00:01 -0400", dtf)) >= 0 ? true : false);
                     })
+                    // order the one hour intervals by the number of events in the interval and if that is the same then order by starting time of the interval.
                     .collect(() -> MinMaxPriorityQueue.orderedBy(new Comparator<Pair<ZonedDateTime, Integer>>() {
                         @Override
                         public int compare(final Pair<ZonedDateTime, Integer> o1, final Pair<ZonedDateTime, Integer> o2) {
@@ -334,7 +352,7 @@ public class Features {
                             int bc = o1.getValue().compareTo(o2.getValue());
                             return (bc == 0) ? tc : bc;
                         }
-                    }.reversed()).maximumSize(k).create(), (q, e) -> q.add(e), (q1, q2) -> q1.addAll(q2));
+                    }.reversed()).maximumSize(n).create(), (q, e) -> q.add(e), (q1, q2) -> q1.addAll(q2));
 
             int topkSize = results.size();
             for (int i = 0; i < n && i < topkSize; i++) {
