@@ -109,6 +109,30 @@ The following illustration may help you understand how this feature might work, 
 
 Note that this feature should not impact the other features in this challenge. For instance, any requests that end up in the `blocked.txt` file should be counted toward the most active IP host calculation, bandwidth consumption and busiest 60-minute period.
 
+
+This is a solution to [Insight Data Engineering program coding challenge](https://github.com/InsightDataScience/fansite-analytics-challenge).
+
+##Dependency 
+
+[Back to Table of Contents] (README.md#table-of-contents)
+
+This solution needs `javac` and `java` commands. So please make sure `java-version-openjdk` and `java-version-openjdk-devel` packages are installed on the Linux system.
+This solution has been tested with 
+<pre>
+java-1.8.0_121-openjdk.x86_64
+java-1.8.0_121-openjdk-devel.x86_64
+</pre>
+
+This solution also uses the [Apache Commons Lang jar](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3/3.5) and [] So please download the [Guava jar](http://www.java2s.com/Code/Jar/g/Downloadguavajar.htm) to the director `./src/`, which is already included in this solution.
+
+##Code Introduction
+
+[Back to Table of Contents] (README.md#table-of-contents)
+
+This solution is written in Java and contains one executable:
+- src.Insight/Analytics/Features.java: the solution to the challenge
+
+
 ### Additional Features
 
 Feel free to implement additional features that might be useful to derive further metrics or prevent harmful activity. These features will be considered as bonus while evaluating your submission. If you choose to add extras please document them in your README and make sure that they don't interfere with the above four (e.g. don't alter the output of the four core features).
