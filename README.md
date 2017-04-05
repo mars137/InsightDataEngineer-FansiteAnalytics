@@ -30,22 +30,20 @@ This solution also uses the [Apache Commons Lang jar](https://mvnrepository.com/
        
 This program has been divided into four different parts- one for each problem. Each part starts with reading all the regular files in log_input folder to get the log entries as a stream, then process the stream using sequence of transforms like filter, map, flatmap and collect to solve the specific business problem. Care has been taken to cleanly separate variuos processing steps into individual self contained small functions which are easy to understand and test. Furthermore, the concern of parallel execution is de-coupled from the core business logic and left to the methods available at the stream layer.
 
-
-    Method 1: getTop10Hosts :    
-    
-    Read in each of log records, extract the hostname/IP, group by hostname and count up the number of occurences, collect into a priority queue ordered by count and print the top 10 hosts to the output file.
+- Method 1: getTop10Hosts :       
+ Read in each of log records, extract the hostname/IP, group by hostname and count up the number of occurences, collect into a priority queue ordered by count and print the top 10 hosts to the output file.
          
-    Method 2: getTop10Resources:    
+- Method 2: getTop10Resources:    
     
-    Read in the log records, extract the resource name and number of bytes, group by resource name and sumup the number of bytes, collect into a priority queue ordered by sum of bytes and print the top 10 resources to the output file.
+ Read in the log records, extract the resource name and number of bytes, group by resource name and sumup the number of bytes, collect into a priority queue ordered by sum of bytes and print the top 10 resources to the output file.
          
-    Method 3: getTopt10Hours   
+- Method 3: getTopt10Hours   
     
-    Read in the log records, extract the timestamp and transform it into range of one-hour intervals with range opening boundary beginning one-hour before the timestamp of the current log record and closing boundary at the current timestamp, collect the range boundaries into a priority queue ordered by timestamp of the range boundary, traverse the range boundary in chronological order and increase the count whenever a open range boundary is encountered and decrease the count whenever a closing range boundary is encountered thus calculating sliding range of one-hour intervals which have the same count. As a final step explode the range of intervals with common count to individual intervals with the same count and print the top 10 to the output file.
+ Read in the log records, extract the timestamp and transform it into range of one-hour intervals with range opening boundary beginning one-hour before the timestamp of the current log record and closing boundary at the current timestamp, collect the range boundaries into a priority queue ordered by timestamp of the range boundary, traverse the range boundary in chronological order and increase the count whenever a open range boundary is encountered and decrease the count whenever a closing range boundary is encountered thus calculating sliding range of one-hour intervals which have the same count. As a final step explode the range of intervals with common count to individual intervals with the same count and print the top 10 to the output file.
          
-    Method 4: getBlockedUsers    
+ - Method 4: getBlockedUsers    
     
-    Read in the log records, extract the hostname, timestamp, whether it was a successful login, whether it was failed login and the whole record, group them into a chronologically ordered sequence by hostname, traverse the sequence and identify the blocked hosts using a state machine as found in problem description and print the blocked users to the output file.
+  Read in the log records, extract the hostname, timestamp, whether it was a successful login, whether it was failed login and the whole record, group them into a chronologically ordered sequence by hostname, traverse the sequence and identify the blocked hosts using a state machine as found in problem description and print the blocked users to the output file.
 
 ### Execution
 
