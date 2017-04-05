@@ -1,0 +1,46 @@
+<project name="InsightDataEngineer-FansiteAnalytics" basedir="." default="dist">
+	<property name="src.dir"     value="src"/>
+	<property name="build.dir"   value="build"/>
+	<property name="classes.dir" value="${build.dir}/classes"/>
+	<property name="jar.dir"     value="src"/>
+	<property name="libs.dir"    value="src"/>
+
+	<path id="project.build.class.path">
+		<fileset dir="${libs.dir}" includes="*.jar"/>
+	</path>
+
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+		<delete file="${jar.dir}/${ant.project.name}.jar"/>
+	</target>
+
+	<!--compile Java source files-->
+	<target name="compile">
+		<mkdir dir="${build.dir}/classes"/>
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" debug="on" deprecation="on" includeantruntime="false">
+			<classpath refid="project.build.class.path"/>
+			<compilerarg value="-Xlint:-path" />
+		</javac>
+	</target>
+
+	<target name="jar" depends="compile" description="Creates jar file">
+		<mkdir dir="${build.dir}/jar"/>
+		<tstamp>
+			<format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+		</tstamp>
+
+		<manifest file="${src.dir}/MANIFEST.MF">
+			<attribute name="Built-By" value="${user.name}"/>
+			<attribute name="Built-Date" value="${TODAY}"/>
+			<attribute name="Main-Class" value="insight.analytics.Features"/>
+			<attribute name="Class-Path" value="${project.build.class.path}"/>
+		</manifest>
+
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" manifest="${src.dir}/MANIFEST.MF">
+			<fileset dir="${build.dir}/classes"
+				includes="**/*.class" >
+			</fileset>
+		</jar>
+	</target>
+</project>
+
