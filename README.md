@@ -25,6 +25,14 @@ I have used Java 8 functional 8 functional progamming constructs and streams for
 
 This solution also uses the [Apache Commons Lang jar](https://mvnrepository.com/artifact/org.apache.commons/commons-lang3/3.5) and  [Guava jar](http://www.java2s.com/Code/Jar/g/Downloadguavajar.htm). So please download the to the directory `./src/`, which is already included in this solution.
     
+### System Specification
+
+System Specification : The solution was executed on
+
+- Linux(Ubuntu 16.04, Intel® Core™ i7-6600U CPU @ 2.60GHz × 4CPU @ 4.00GHz)
+- Unix(macOS Sierra v10.12.4,Intel(R) Core(TM) i5-5557U CPU @ 2.5GHz)
+
+
 
 ### High Level Software Design :
        
